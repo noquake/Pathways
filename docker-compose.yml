@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg18-trixie
+    container_name: pathways_db
+    environment:
+      POSTGRES_DB: pathways
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+
+
+volumes:
+  pgdata:
