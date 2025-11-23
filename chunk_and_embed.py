@@ -46,7 +46,7 @@ def embed_chunks(chunks):
 embed_chunks(chunks) # Run the embedding function
 
 # connect to the PostgreSQL database, casting the connection from variable -> to a vector type for psycopg2
-conn = psycopg2.connect("dbname=pathways user=admin password=password host=localhost port=5432")
+conn = psycopg2.connect("dbname=pathways user=admin password=password host=localhost port=8080")
 register_vector(conn)
 
 # creates a cursor object to start executing SQL commands
