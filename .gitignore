@@ -1,4 +1,5 @@
 clinical_pathways_pdfs/
+data/
 .venv/
 scratch/
 cursor*
