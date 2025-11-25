@@ -76,22 +76,24 @@ def generate_chunks() -> List[Dict[str, Any]]:
 
 def create_db_connection():
     # connect to the PostgreSQL database, casting the connection from variable -> to a vector type for psycopg1
-    conn = psycopg1.connect("dbname=pathways user=admin password=password host=localhost port=5432")
+    conn = psycopg2.connect("dbname=pathways user=admin password=password host=localhost port=5432")
 
     # creates a cursor object to start executing SQL commands
     cur = conn.cursor()
+
     cur.execute('CREATE EXTENSION IF NOT EXISTS vector;')
+
     register_vector(conn)
 
     # create table of items with vector embeddings and metadata
     cur.execute('''
         CREATE TABLE IF NOT EXISTS items (
-            chunk_id bigserial PRIMARY KEY,
-            chunk_index INTEGER NOT NULL,
-         chunk_text TEXT NOT NULL,
-         chunk_length INTEGER NOT NULL,
-         source_file VARCHAR(254),
-         embedding vector(383) NOT NULL
+        chunk_id bigserial PRIMARY KEY,
+        chunk_index INTEGER NOT NULL,
+        chunk_text TEXT NOT NULL,
+        chunk_length INTEGER NOT NULL,
+        source_file VARCHAR(254),
+        embedding vector(384) NOT NULL
       )
     ''')
 
@@ -100,6 +102,8 @@ def create_db_connection():
     cur.execute('CREATE INDEX IF NOT EXISTS embeddings ON items USING hnsw (embedding vector_l1_ops)')
     # Cluster-based ANN 
     # cur.execute('CREATE INDEX ON items USING ivfflat (embedding vector_l1_ops) WITH (lists = 100)')
+    
+    return conn, cur
 
 # Extract chunk texts from the all_chunks dictionaries which contains texts + other metadata
 def get_chunk_text(chunks):
@@ -140,17 +144,52 @@ def insert_chunks_and_embeddings_to_db(chunks, embeddings, cur, conn):
         ''', (chunk_index, chunk_text, chunk_length, source_file, emb))
     conn.commit()
 
+def simple_query(cur, top_k: int = 5):
+    """
+    Prompt user for a query and return top-k most relevant chunks from an existing DB cursor.
+    """
+    query = input("Enter your query: ")
+    
+    # Encode query
+    query_emb = model.encode(query)
+    query_emb_list = query_emb.tolist() if hasattr(query_emb, "tolist") else query_emb
+
+    # Search top-k most similar embeddings
+    cur.execute('''
+        SELECT chunk_index, chunk_text, chunk_length, source_file
+        FROM items
+        ORDER BY embedding <-> %s::vector
+        LIMIT %s
+    ''', (query_emb_list, top_k))
+
+    results = cur.fetchall()
+
+    # Print results
+    print("\nTop Results:\n" + "="*40)
+    for r in results:
+        chunk_index, chunk_text, chunk_length, source_file = r
+        print(f"Chunk Index: {chunk_index}")
+        print(f"Source File: {source_file}")
+        print(f"Chunk Length: {chunk_length}")
+        print(f"Chunk Text: {chunk_text[:200]}..." if len(chunk_text) > 200 else f"Chunk Text: {chunk_text}")
+        print("-"*40)
+
 def main():
+    conn, cur = create_db_connection()
     chunks = generate_chunks()
     chunk_texts = get_chunk_text(chunks)
     embeddings = get_embeddings(chunk_texts)
     save_embeddings_file(chunks, embeddings)
 
-    conn, cur = create_db_connection()
+    simple_query(cur)
+
     insert_chunks_and_embeddings_to_db(chunks, embeddings, cur, conn)
     conn.close()
 
-""" QUERY EXAMPLE """
+if __name__ == "__main__":
+    main()
+
+# """ QUERY EXAMPLE """
 # query = "What is Pathways?"
 # query_emb = model.encode(query)
 # cur.execute('''
