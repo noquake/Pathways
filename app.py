@@ -14,3 +14,6 @@ def main():
 
     # chunk and embed the transformed data for use in retrieval-augmented generation
     chunk_and_embed()
+    
+if __name__ == "__main__": 
+    main()
