@@ -5,3 +5,5 @@ sentence-transformers
 langchain
 torch
 psycopg2-binary
+openai
+ollama

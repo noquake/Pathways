@@ -144,35 +144,6 @@ def insert_chunks_and_embeddings_to_db(chunks, embeddings, cur, conn):
         ''', (chunk_index, chunk_text, chunk_length, source_file, emb))
     conn.commit()
 
-def simple_query(cur, top_k: int = 5):
-    """
-    Prompt user for a query and return top-k most relevant chunks from an existing DB cursor.
-    """
-    query = input("Enter your query: ")
-    
-    # Encode query
-    query_emb = model.encode(query)
-    query_emb_list = query_emb.tolist() if hasattr(query_emb, "tolist") else query_emb
-
-    # Search top-k most similar embeddings
-    cur.execute('''
-        SELECT chunk_index, chunk_text, chunk_length, source_file
-        FROM items
-        ORDER BY embedding <-> %s::vector
-        LIMIT %s
-    ''', (query_emb_list, top_k))
-
-    results = cur.fetchall()
-
-    # Print results
-    print("\nTop Results:\n" + "="*40)
-    for r in results:
-        chunk_index, chunk_text, chunk_length, source_file = r
-        print(f"Chunk Index: {chunk_index}")
-        print(f"Source File: {source_file}")
-        print(f"Chunk Length: {chunk_length}")
-        print(f"Chunk Text: {chunk_text[:200]}..." if len(chunk_text) > 200 else f"Chunk Text: {chunk_text}")
-        print("-"*40)
 
 def main():
     conn, cur = create_db_connection()
@@ -181,10 +152,10 @@ def main():
     embeddings = get_embeddings(chunk_texts)
     save_embeddings_file(chunks, embeddings)
 
-    simple_query(cur)
-
     insert_chunks_and_embeddings_to_db(chunks, embeddings, cur, conn)
     conn.close()
+
+    print("Chunking and embedding complete.\n")
 
 if __name__ == "__main__":
     main()
