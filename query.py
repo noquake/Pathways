@@ -1,7 +1,7 @@
 from typing import List, Dict
 from sentence_transformers import SentenceTransformer
 import psycopg2
-import openai
+# import openai
 from ollama import Ollama
 from ollama import Client
 
@@ -12,7 +12,7 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 ollama = Ollama()  # defaults to localhost
 ollama = Client(host="http://localhost:11434")  # default port for local server
 
-response = ollama.chat(model="llama2", messages=[{"role": "user", "content": "Hello, Ollama!"}])
+response = ollama.chat(model="qwen2.5:7b", messages=[{"role": "user", "content": "Hello, Ollama!"}])
 print(response['content'])
 
 ollama = Ollama()  # Only if using local LLaMA
