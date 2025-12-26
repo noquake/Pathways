@@ -1,11 +1,30 @@
 from pathlib import Path
-from sentence_transformers import SentenceTransformer # type: ignore
 import psycopg2
 from pgvector.psycopg2 import register_vector
+
 from typing import List, Dict, Any
+
+from sentence_transformers import SentenceTransformer # type: ignore
 from docling.chunking import HybridChunker
+from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
+from transformers import AutoTokenizer
+
+MAX_TOKENS = 384
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
+
+tokenizer = HuggingFaceTokenizer(
+    tokenizer=AutoTokenizer.from_pretrained(EMBED_MODEL_ID),
+    max_tokens=MAX_TOKENS,  # optional, by default derived from `tokenizer` for HF case
+)
+
+chunker = HybridChunker(
+    tokenizer=tokenizer,
+    merge_peers=True,
+)
+
+chunk_iter = chunker.chunk(dl_doc=doc)
+chunks = list(chunk_iter)
 
 # Function to create chunks with single file its metadata, stored in file_chunks
 def chunk(texts: str, source_file: str = None, max_len: int = 700) -> List[Dict[str, Any]]:
@@ -69,6 +88,14 @@ def generate_chunks() -> List[Dict[str, Any]]:
         print(f"[{i}/{len(md_files)}] {md_path.name}: {len(file_chunks)} chunks")
     return all_chunk_data
 
+# Extract chunk texts from the all_chunks dictionaries which contains texts + other metadata
+def get_chunk_text(chunks):
+    if chunks and isinstance(chunks[0], dict):
+        chunk_texts = [chunk["chunk_text"] for chunk in chunks]
+    else:
+        chunk_texts = chunks
+    return chunk_texts
+
 """ Testing to see if the output actually comes out as expected """
 # output_path = Path("scratch/chunks.txt")
 # with output_path.open("w") as f:
@@ -108,13 +135,6 @@ def create_db_connection():
     
     return conn, cur
 
-# Extract chunk texts from the all_chunks dictionaries which contains texts + other metadata
-def get_chunk_text(chunks):
-    if chunks and isinstance(chunks[0], dict):
-        chunk_texts = [chunk["chunk_text"] for chunk in chunks]
-    else:
-        chunk_texts = chunks
-    return chunk_texts
 
 def get_embeddings(chunk_texts):
     return model.encode(chunk_texts)
