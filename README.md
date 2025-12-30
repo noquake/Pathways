@@ -9,6 +9,35 @@ A lightweight **Retrieval-Augmented Generation** system using:
 
 This project has been designed to be as clear as possible in its execution and debugging. It streams the generation of chunks, embeddings and their injection the docker database to reduce memory usage.
 
+## TO-DO
+
+- citation information support in chunk generation based on document & document page origin
+- PUBLIC ASSISTANT
+  - Single-page web app (React / Next.js / simple HTML+JS)
+  - Chat UI (prompt → response)
+  - Stateless back-end calls (no session persistence)
+  - Rate-limiting + abuse protection
+  - Pathway citation display (doc name + section)
+- AUTHENTICATED PRACTITIONER
+  - Secure login
+  - Role = Practitioner
+  - Persistent conversational context
+  - Query history tied to user identity
+  - Team based collaboration?
+  - EMR/EHR integration?
+- ADMINISTRATIVE DASHBOARD
+  - Login + admin role
+  - Usage metrics:
+    - Number of queries
+    - Most accessed pathways
+    - Peak usage times
+    - Public vs staff usage split
+  - Health monitoring:
+    - System uptime
+    - Ingestion status
+    - Embedding freshness
+  - Exportable reports (CSV)
+
 ---
 
 ## Getting Started
