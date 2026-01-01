@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database with pgvector
   db:
     image: pgvector/pgvector:pg18-trixie
     container_name: pathways_db
@@ -11,8 +8,6 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin"]
       interval: 10s

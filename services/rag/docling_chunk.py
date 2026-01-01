@@ -7,6 +7,7 @@ import hashlib
 from sentence_transformers import SentenceTransformer # type: ignore
 from docling.chunking import HybridChunker
 from docling_core.types.doc import DoclingDocument
+from docling.document_converter import DocumentConverter
 from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 from transformers import AutoTokenizer
 
@@ -31,7 +32,8 @@ def hash_chunk_text(text: str) -> str:
 # Retrieve docling-ized md files, generate chunks and append them to an all_chunks list
 def generate_chunks(md_dir: str, chunker: HybridChunker):
     md_dir = Path(md_dir)
-    preferred = "*.doctags.txt"
+    # preferred = "*.doctags.txt"
+    preferred = "*.md"
     md_files = list(md_dir.glob(preferred))
     print(f"Found {len(md_files)} files matching {preferred}")
     
@@ -39,14 +41,13 @@ def generate_chunks(md_dir: str, chunker: HybridChunker):
     assert md_files, f"No markdown files found in md_dir"
     global_idx = 0
     for i, file in enumerate(md_files, 1):
-        doc = DoclingDocument.load_from_doctags(file)
-        
+        doc = DocumentConverter().convert(source=file).document
         doc_chunk_idx = 0
         for raw_chunk in chunker.chunk(dl_doc=doc):
             global_idx += 1
             doc_chunk_idx += 1
             contextualized_chunk = chunker.contextualize(raw_chunk)
-            chunk_text = contextualized_chunk.text
+            chunk_text = contextualized_chunk
             chunk_hash = hash_chunk_text(chunk_text)
             yield {
                 "global_index": global_idx,
@@ -69,17 +70,33 @@ def create_db_connection():
 
     register_vector(conn)
 
-    # create table of items with vector embeddings and metadata
-    cur.execute('''
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS items (
-        chunk_id bigserial PRIMARY KEY,
-        chunk_index INTEGER NOT NULL,
-        chunk_text TEXT NOT NULL,
-        chunk_length INTEGER NOT NULL,
-        source_file VARCHAR(254),
-        embedding vector(384) NOT NULL
-      )
-    ''')
+            chunk_id BIGSERIAL PRIMARY KEY,
+            chunk_hash TEXT UNIQUE NOT NULL,
+            doc_name TEXT NOT NULL,
+            doc_chunk_index INTEGER NOT NULL,
+            chunk_text TEXT NOT NULL,
+            chunk_length INTEGER NOT NULL,
+            embedding vector(384) NOT NULL
+        );
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS items_embedding_hnsw
+        ON items
+        USING hnsw (embedding vector_l2_ops);
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS items_doc_name_idx
+        ON items (doc_name);
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS items_chunk_hash_idx
+        ON items (chunk_hash);
+    """)
 
     """ Index types for pgvector """
     # Approximate Nearest Neighbor (ANN) indexes for faster search MEDIUM to LARGE datasets, bad space
@@ -90,7 +107,7 @@ def create_db_connection():
     return conn, cur
 
 def get_embedding(contextualized_chunk):
-    return model.encode(contextualized_chunk.text)
+    return model.encode(contextualized_chunk)
 
 
 
@@ -112,8 +129,8 @@ def insert_chunk_and_embedding_to_db(chunk, embedding, cur, conn):
             chunk["chunk_hash"],
             chunk["doc_name"],
             chunk["doc_chunk_index"],
-            chunk["chunk_text"],
-            len(chunk["chunk_text"]),
+            chunk["contextualized_chunk"],
+            len(chunk["contextualized_chunk"]),
             embedding.tolist() if hasattr(embedding, "tolist") else embedding,
         ),
     )
@@ -128,7 +145,7 @@ def main():
         "embedding -> DB insertion...\n"
     )
 
-    for item in generate_chunks("scratch/", chunker):
+    for item in generate_chunks("services/rag/data/transformed_files/", chunker):
         print(f"Processing chunk #{item['global_index']}...\n")
 
         # contextualization already happened in the generator

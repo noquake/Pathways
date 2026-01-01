@@ -17,16 +17,6 @@ _log = logging.getLogger(__name__)
 USE_V2 = True # use modern Docling export formats
 USE_LEGACY = False
 
-""" 
-EXAMPLE WITH SINGLE DOCUMENT ----------------------------------------------------------------------------------------------
-source = "/data/agitation_education_module_-_9.6.23.pdf"  # file path or URL
-converter = DocumentConverter()
-doc = converter.convert(source).document
-
-print(doc.export_to_markdown())  # output: "### Docling Technical Report[...]"
-END ----------------------------------------------------------------------------------------------------------------------
-"""
-
 def save_document_json(document, output_path: Path, image_mode: ImageRefMode = ImageRefMode.PLACEHOLDER):
     document.save_as_json(output_path, image_mode=image_mode)
 
@@ -153,7 +143,7 @@ def main():
     # include test data, change `data_folder` or point `input_doc_paths` to
     # your own files.
     
-    data_folder = Path(__file__).parent / "data/"
+    data_folder = Path(__file__).parent / "data/transformed_files"
 
     input_doc_paths = list(data_folder.glob("*")) 
 
@@ -180,9 +170,9 @@ def main():
         input_doc_paths,
         raises_on_error=False,  # to let conversion run through all and examine results at the end
     )
-    # Write outputs to ./scratch and log a summary.
+    # Write outputs to ./transformed_files and log a summary.
     _success_count, _partial_success_count, failure_count = export_conversion_summary(
-        conv_results, output_dir=Path("scratch")
+        conv_results, output_dir=Path("transformed_files/")
     )
 
     end_time = time.time() - start_time

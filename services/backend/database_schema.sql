@@ -1,6 +1,3 @@
--- MVP 1 Database Schema
--- Extends existing items table with chat logs and user context
-
 -- Chat logs for public users (anonymized)
 CREATE TABLE IF NOT EXISTS chat_logs_public (
     id BIGSERIAL PRIMARY KEY,

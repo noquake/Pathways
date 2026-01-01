@@ -57,10 +57,10 @@ def chunk(texts: str, source_file: str = None, max_len: int = 700) -> List[Dict[
         })
     return file_chunks
 
-# Generating chunks from markdown files in the "scratch" directory
+# Generating chunks from markdown files in the "transformed_files" directory
 def generate_chunks() -> List[Dict[str, Any]]:
     all_chunk_data = []
-    md_files = list(Path("scratch").glob("*.md"))
+    md_files = list(Path("services/rag/data/transformed_files").glob("*.md"))
     print(f"Processing {len(md_files)} markdown files...")
     for i, md_path in enumerate(md_files, 1):
         md_texts = md_path.read_text()
@@ -70,7 +70,7 @@ def generate_chunks() -> List[Dict[str, Any]]:
     return all_chunk_data
 
 """ Testing to see if the output actually comes out as expected """
-# output_path = Path("scratch/chunks.txt")
+# output_path = Path("transformed_files/chunks.txt")
 # with output_path.open("w") as f:
 #     for i, chunk in enumerate(chunks):
 #         f.write(f"\n\n===== CHUNK {i} =====\n\n")

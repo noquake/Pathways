@@ -1,9 +1,10 @@
 import subprocess
 import sys
 
-from scrape_docs import main as scrape_docs
-from transform_data import main as transform_data
-from chunk_and_embed import main as chunk_and_embed
+from services.rag.scrape_docs import main as scrape_docs
+from services.rag.transform_data import main as transform_data
+from services.rag.default_chunk import main as default_chunk
+from services.rag.docling_chunk import main as docling_chunk
 
 def spin_up_docker():
     subprocess.run(["docker", "compose", "up", "-d", ])
@@ -19,7 +20,7 @@ def main():
     transform_data()
 
     # chunk and embed the transformed data for use in retrieval-augmented generation
-    chunk_and_embed()
+    docling_chunk()
 
 if __name__ == "__main__": 
     main()
