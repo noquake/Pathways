@@ -102,3 +102,27 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`traefik.localhost`)"
       - "traefik.http.routers.api.service=api@internal"
+  backend:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile
+    container_name: pathways_backend
+    environment:
+      DATABASE_URL: postgresql://admin:password@pathways_db:5432/pathways
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: pathways
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/backend:/app
+      - ./default_chunk.py:/app/default_chunk.py:ro
+      - ./query.py:/app/query.py:ro
+    depends_on:
+      pathways_db:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

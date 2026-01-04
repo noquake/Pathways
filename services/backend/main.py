@@ -1,7 +1,3 @@
-"""
-MVP 1: Backend API Service
-Handles chat queries, role-based routing, and RAG pipeline integration.
-"""
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

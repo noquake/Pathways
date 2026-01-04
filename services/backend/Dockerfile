@@ -2,22 +2,21 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install OS dependencies
+# Install OS deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy Python files
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY . .
 
-# Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run ingestion automatically when building
+# RUN python ingest.py
 
+CMD ["python", "app.py"]
