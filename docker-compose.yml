@@ -20,6 +20,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      
   pgadmin:
     image: dpage/pgadmin4
     container_name: pathways_pgadmin
@@ -27,7 +28,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: password
     ports:
-      - "7001:80"      # host port 7001 maps to container port 80 (web UI)
+      - "7001:80"      
     volumes:
       - ./config/servers.json:/pgadmin4/servers.json:ro
     depends_on:
@@ -37,6 +38,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   keycloak_db:
     image: postgres:16
     container_name: keycloak_db
@@ -51,8 +53,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:26.5.0
     container_name: pathways_keycloak
     command: start-dev
     environment:
@@ -79,6 +82,7 @@ services:
       - "traefik.http.routers.keycloak.rule=Host(`auth.pathways.localhost`)"
       - "traefik.http.routers.keycloak.entrypoints=web"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+
   traefik:
     image: traefik:v3.6
     container_name: pathways_traefik
@@ -102,6 +106,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`traefik.localhost`)"
       - "traefik.http.routers.api.service=api@internal"
+
   backend:
     build:
       context: ./services/backend
@@ -126,6 +131,7 @@ services:
       keycloak:
         condition: service_healthy
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    
   frontend:
     build:
       context: ./services/frontend
