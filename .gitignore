@@ -10,3 +10,10 @@ __pycache__/
 *.json
 !servers.json
 !package.json
+
+# Windows venv files
+pyvenv.cfg
+Scripts/
+Lib/
+Include/
+share/

@@ -4,6 +4,8 @@ networks:
 
 volumes:
   keycloak_db_data:
+  pathways_db_data:
+
 
 services:
   pathways_db: # refactor to pathways_db at some point
@@ -50,7 +52,7 @@ services:
       - keycloak_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U keycloak"]
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 5
 
@@ -59,8 +61,10 @@ services:
     container_name: pathways_keycloak
     command: start-dev
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_HEALTH_ENABLED_READINESS: "true"
+      KEYCLOAK_ADMIN: keycloak
+      KEYCLOAK_ADMIN_PASSWORD: keycloak
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak
       KC_DB_USERNAME: keycloak
@@ -73,10 +77,10 @@ services:
     volumes:
       - ./keycloak/config:/opt/keycloak/data/import:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/auth/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
       interval: 30s
-      timeout: 10s
-      retries: 5
+      timeout: 15s
+      retries: 15
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.keycloak.rule=Host(`auth.pathways.localhost`)"
@@ -123,8 +127,6 @@ services:
       - "8000:8000"
     volumes:
       - ./services/backend:/app
-      - ./default_chunk.py:/app/default_chunk.py:ro
-      - ./query.py:/app/query.py:ro
     depends_on:
       pathways_db:
         condition: service_healthy
@@ -143,8 +145,8 @@ services:
       - ./services/frontend:/app
       - /app/node_modules
     environment:
-      REACT_APP_API_URL: http://localhost:8000
-      REACT_APP_KEYCLOAK_URL: http://localhost:8080
+      REACT_APP_API_URL: http://backend:8000
+      REACT_APP_KEYCLOAK_URL: http://frontend:8080
       REACT_APP_KEYCLOAK_REALM: pathways
       REACT_APP_KEYCLOAK_CLIENT_ID: pathways-frontend
     depends_on:
