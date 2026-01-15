@@ -17,3 +17,7 @@ Scripts/
 Lib/
 Include/
 share/
+
+# npm package files
+node_modules/
+.lock
