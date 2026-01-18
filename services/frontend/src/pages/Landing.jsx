@@ -27,8 +27,8 @@ const Landing = () => {
           <h2>Application Areas</h2>
           <ul className="pathway-list">
             <li>
-              <a href="/chat" className="placeholder">Clinical Chat Interface</a>
-              <span className="placeholder"> — coming soon</span>
+              <a href="/chat" className="pathway-list">Clinical Chat Interface</a>
+              <span> — Ask questions about the Clinical Pathways without logging in.</span>
             </li>
             <li>
               <a href="/explorer" className="placeholder">Pathway Explorer</a>
